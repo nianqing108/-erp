@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.erp.shipment.mapper.ShipmentMapper">
+
+    <select id="selectByOrderIds" resultType="com.erp.shipment.entity.Shipment">
+        SELECT s.id,
+               s.order_id       AS orderId,
+               s.shipment_date  AS shipmentDate,
+               s.tracking_no    AS trackingNo,
+               s.confirmed      AS confirmed,
+               s.remark         AS remark,
+               s.created_at     AS createdAt,
+               s.updated_at     AS updatedAt
+        FROM shipments s
+        WHERE s.order_id IN
+        <foreach collection="orderIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+</mapper>

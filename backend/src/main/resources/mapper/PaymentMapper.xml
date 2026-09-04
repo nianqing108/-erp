@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.erp.payment.mapper.PaymentMapper">
+
+    <select id="selectSumGroupByOrder" resultType="com.erp.payment.vo.OrderPaidVO">
+        SELECT p.order_id    AS orderId,
+               SUM(p.amount) AS paidAmount
+        FROM payments p
+        GROUP BY p.order_id
+    </select>
+
+    <select id="sumByOrderId" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(p.amount), 0)
+        FROM payments p
+        WHERE p.order_id = #{orderId}
+    </select>
+
+    <select id="selectByOrderIds" resultType="com.erp.payment.entity.Payment">
+        SELECT p.id,
+               p.order_id      AS orderId,
+               p.amount        AS amount,
+               p.received_date AS receivedDate,
+               p.note          AS note,
+               p.created_at    AS createdAt
+        FROM payments p
+        WHERE p.order_id IN
+        <foreach collection="orderIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        ORDER BY p.received_date DESC, p.id DESC
+    </select>
+
+</mapper>

@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.erp.customer.mapper.CustomerMapper">
+
+    <!--
+      客户欠款聚合子查询：
+      - debt_amount  仅统计 status='shipped' 的未结余额
+      - order_count  统计全部非取消订单数
+      注意：必须先按订单聚合收款再相减，否则多笔收款会放大 total_amount。
+    -->
+    <sql id="debtAggregation">
+        SELECT o.customer_id                     AS customer_id,
+               SUM(CASE WHEN o.status = 'shipped'
+                        THEN o.total_amount - COALESCE(t.paid_amount, 0)
+                        ELSE 0 END)              AS debt_amount,
+               SUM(CASE WHEN o.status &lt;&gt; 'cancelled' THEN 1 ELSE 0 END) AS order_count
+        FROM orders o
+        LEFT JOIN (SELECT order_id, SUM(amount) AS paid_amount FROM payments GROUP BY order_id) t
+                  ON o.id = t.order_id
+        GROUP BY o.customer_id
+    </sql>
+
+    <select id="selectPageWithDebt" resultType="com.erp.customer.entity.Customer">
+        SELECT c.id,
+               c.name,
+               c.contact,
+               c.phone,
+               c.credit_limit  AS creditLimit,
+               c.remark,
+               c.created_at    AS createdAt,
+               c.updated_at    AS updatedAt,
+               COALESCE(d.debt_amount, 0)  AS debtAmount,
+               COALESCE(d.order_count, 0)  AS orderCount
+        FROM customers c
+        LEFT JOIN (<include refid="debtAggregation"/>) d ON c.id = d.customer_id
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (c.name LIKE CONCAT('%', #{keyword}, '%')
+                  OR c.contact LIKE CONCAT('%', #{keyword}, '%')
+                  OR c.phone LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="onlyDebt != null and onlyDebt">
+                AND COALESCE(d.debt_amount, 0) &gt; 0
+            </if>
+        </where>
+        ORDER BY COALESCE(d.debt_amount, 0) DESC, c.id DESC
+    </select>
+
+    <select id="selectTopDebt" resultType="com.erp.customer.entity.Customer">
+        SELECT c.id,
+               c.name,
+               c.contact,
+               c.phone,
+               c.credit_limit            AS creditLimit,
+               COALESCE(d.debt_amount, 0) AS debtAmount,
+               COALESCE(d.order_count, 0) AS orderCount
+        FROM customers c
+        JOIN (<include refid="debtAggregation"/>) d ON c.id = d.customer_id
+        WHERE d.debt_amount &gt; 0
+        ORDER BY d.debt_amount DESC
+        LIMIT #{limit}
+    </select>
+
+    <select id="selectDebtByCustomerId" resultType="com.erp.customer.entity.Customer">
+        SELECT d.customer_id              AS id,
+               COALESCE(d.debt_amount, 0) AS debtAmount,
+               COALESCE(d.order_count, 0) AS orderCount
+        FROM (<include refid="debtAggregation"/>) d
+        WHERE d.customer_id = #{customerId}
+    </select>
+
+</mapper>

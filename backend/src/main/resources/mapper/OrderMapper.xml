@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.erp.order.mapper.OrderMapper">
+
+    <!--
+      按订单聚合收款的子查询。
+      必须先聚合再 JOIN，否则一笔订单多笔收款时会把 total_amount 放大 N 倍
+      （原规划文档 SQL 的缺陷）。
+    -->
+    <sql id="paidAggregation">
+        SELECT p.order_id, SUM(p.amount) AS paid_amount
+        FROM payments p
+        GROUP BY p.order_id
+    </sql>
+
+    <select id="selectOrderPage" resultType="com.erp.order.vo.OrderVO">
+        SELECT o.id,
+               o.order_no                          AS orderNo,
+               o.customer_order_no                 AS customerOrderNo,
+               o.customer_id                       AS customerId,
+               c.name                              AS customerName,
+               o.order_date                        AS orderDate,
+               o.total_amount                      AS totalAmount,
+               o.status                            AS status,
+               o.expected_delivery                 AS expectedDelivery,
+               o.due_date                          AS dueDate,
+               o.remark                            AS remark,
+               o.created_at                        AS createdAt,
+               o.updated_at                        AS updatedAt,
+               COALESCE(t.paid_amount, 0)          AS paidAmount
+        FROM orders o
+                 JOIN customers c ON o.customer_id = c.id
+                 LEFT JOIN (<include refid="paidAggregation"/>) t ON o.id = t.order_id
+        <where>
+            <if test="q.status != null and q.status != ''">
+                AND o.status = #{q.status}
+            </if>
+            <if test="q.customerId != null">
+                AND o.customer_id = #{q.customerId}
+            </if>
+            <if test="q.orderNo != null and q.orderNo != ''">
+                AND o.order_no LIKE #{q.orderNo}
+            </if>
+            <if test="q.customerOrderNo != null and q.customerOrderNo != ''">
+                AND o.customer_order_no LIKE #{q.customerOrderNo}
+            </if>
+            <if test="q.dateFrom != null">
+                AND o.order_date &gt;= #{q.dateFrom}
+            </if>
+            <if test="q.dateTo != null">
+                AND o.order_date &lt;= #{q.dateTo}
+            </if>
+        </where>
+        ORDER BY o.id DESC
+    </select>
+
+    <!--
+      应收行：仅统计 status='shipped'（已实际发货）。
+      shipment_date 取已确认的出货记录，作为账龄起算基准。
+    -->
+    <select id="selectShippedDebtRows" resultType="com.erp.order.vo.DebtRowVO">
+        SELECT o.id                                AS orderId,
+               o.order_no                          AS orderNo,
+               o.customer_order_no                 AS customerOrderNo,
+               o.customer_id                       AS customerId,
+               c.name                              AS customerName,
+               o.total_amount                      AS totalAmount,
+               COALESCE(t.paid_amount, 0)          AS paidAmount,
+               o.total_amount - COALESCE(t.paid_amount, 0) AS balance,
+               s.shipment_date                     AS shipmentDate
+        FROM orders o
+                 JOIN customers c ON o.customer_id = c.id
+                 JOIN shipments s ON o.id = s.order_id
+                 LEFT JOIN (<include refid="paidAggregation"/>) t ON o.id = t.order_id
+        WHERE o.status = 'shipped'
+        ORDER BY s.shipment_date ASC
+    </select>
+
+    <select id="selectAmountGroupByStatus" resultType="com.erp.order.vo.StatusAmountVO">
+        SELECT o.status                     AS status,
+               COALESCE(SUM(o.total_amount), 0) AS amount,
+               COUNT(1)                     AS cnt
+        FROM orders o
+        GROUP BY o.status
+    </select>
+
+    <!-- 条件更新：并发下保证状态不会被覆盖 -->
+    <update id="updateStatusCascade">
+        UPDATE orders
+        SET status = #{target}
+        WHERE id = #{id}
+          AND status = #{expected}
+    </update>
+
+</mapper>

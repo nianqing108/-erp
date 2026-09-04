@@ -1,0 +1,103 @@
+server:
+  port: 8080
+  forward-headers-strategy: framework
+
+spring:
+  application:
+    name: erp-backend
+  profiles:
+    active: mysql
+
+  # JSON：时区统一、忽略 null、日期按 ISO 字符串输出
+  jackson:
+    time-zone: Asia/Shanghai
+    default-property-inclusion: non_null
+    serialization:
+      write-dates-as-timestamps: false
+
+  servlet:
+    multipart:
+      max-file-size: 10MB
+
+  output:
+    ansi:
+      enabled: always
+
+---
+# ===================== MySQL 生产/常规开发配置（默认） =====================
+spring:
+  config:
+    activate:
+      on-profile: mysql
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    # 必须带 serverTimezone=Asia/Shanghai，否则日期字段会错位（原文档附录缺陷第 7 条）
+    url: jdbc:mysql://localhost:3306/erp_db?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
+    username: root
+    password: 123456
+    hikari:
+      pool-name: ErpHikariPool
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+
+---
+# ===================== H2 免安装本地试运行配置 =====================
+# 启动方式：mvn spring-boot:run -Dspring-boot.run.profiles=h2
+# 用途：本机未安装 MySQL 时快速体验与自测，数据存于内存，重启即丢失
+spring:
+  config:
+    activate:
+      on-profile: h2
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:erp;MODE=MySQL;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE;DB_CLOSE_DELAY=-1
+    username: sa
+    password: ""
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema-h2.sql
+      continue-on-error: false
+
+---
+# ===================== 公共配置 =====================
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jLogger
+    default-enum-type-handler: com.baomidou.mybatisplus.core.handlers.MybatisEnumTypeHandler
+  global-config:
+    db-config:
+      id-type: auto
+      table-prefix: ""
+  mapper-locations: classpath*:/mapper/**/*.xml
+
+erp:
+  order-no:
+    prefix: ORD
+    seq-length: 4
+    max-retry: 3
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  api-docs:
+    path: /v3/api-docs
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    root: INFO
+    com.erp: DEBUG
+    com.erp.order.OrderNoGenerator: INFO
