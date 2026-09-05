@@ -15,10 +15,15 @@ import java.util.Arrays;
 @Getter
 public enum OrderStatus {
 
-    /** 录入：刚录入，未排产 */
-    DRAFT("draft", "录入"),
+    /** 待发货：已录入，尚未发货 */
+    DRAFT("draft", "待发货"),
 
-    /** 待出货：已生成出货单（计划发货），尚未实际发出 */
+    /**
+     * 待出货（历史兼容值）。
+     *
+     * <p>流程已简化为「录入 → 直接发货」，新流程不再产生该状态；
+     * 保留枚举与数据库枚举值兼容历史数据展示。
+     */
     PENDING("pending", "待出货"),
 
     /** 待付款：已实际发货，形成应收 */
@@ -38,14 +43,9 @@ public enum OrderStatus {
         this.label = label;
     }
 
-    /** 是否可生成出货单 */
+    /** 是否可直接发货（实际发货，形成应收） */
     public boolean canShip() {
         return this == DRAFT;
-    }
-
-    /** 是否可确认发货 */
-    public boolean canConfirmShip() {
-        return this == PENDING;
     }
 
     /** 是否可录入收款 */
@@ -53,9 +53,9 @@ public enum OrderStatus {
         return this == SHIPPED;
     }
 
-    /** 是否可取消 */
+    /** 是否可取消（仅未发货可取消） */
     public boolean canCancel() {
-        return this == DRAFT || this == PENDING;
+        return this == DRAFT;
     }
 
     /** 是否可编辑核心字段 */

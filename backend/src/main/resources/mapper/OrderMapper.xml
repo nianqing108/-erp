@@ -68,7 +68,8 @@
                o.total_amount                      AS totalAmount,
                COALESCE(t.paid_amount, 0)          AS paidAmount,
                o.total_amount - COALESCE(t.paid_amount, 0) AS balance,
-               s.shipment_date                     AS shipmentDate
+               s.shipment_date                     AS shipmentDate,
+               o.due_date                          AS dueDate
         FROM orders o
                  JOIN customers c ON o.customer_id = c.id
                  JOIN shipments s ON o.id = s.order_id
@@ -83,6 +84,39 @@
                COUNT(1)                     AS cnt
         FROM orders o
         GROUP BY o.status
+    </select>
+
+    <!--
+      对账单数据源：按「实际发货日」归属区间。
+      仅含 shipped / paid —— 未发货不形成应收，已取消不参与对账。
+    -->
+    <select id="selectShippedByCustomer" resultType="com.erp.report.vo.StatementOrderVO">
+        SELECT o.id,
+               o.order_no           AS orderNo,
+               o.customer_order_no  AS customerOrderNo,
+               o.customer_id        AS customerId,
+               o.order_date         AS orderDate,
+               o.total_amount       AS totalAmount,
+               o.status             AS status,
+               o.expected_delivery  AS expectedDelivery,
+               o.due_date           AS dueDate,
+               o.remark             AS remark,
+               s.shipment_date      AS shipmentDate,
+               s.tracking_no        AS trackingNo
+        FROM orders o
+                 JOIN shipments s ON o.id = s.order_id
+        <where>
+            AND o.customer_id = #{customerId}
+            AND o.status IN ('shipped', 'paid')
+            AND s.confirmed = 1
+            <if test="from != null">
+                AND s.shipment_date &gt;= #{from}
+            </if>
+            <if test="to != null">
+                AND s.shipment_date &lt;= #{to}
+            </if>
+        </where>
+        ORDER BY s.shipment_date ASC, o.id ASC
     </select>
 
     <!-- 条件更新：并发下保证状态不会被覆盖 -->

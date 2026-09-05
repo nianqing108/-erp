@@ -21,11 +21,13 @@ public class JacksonConfig {
     @Bean
     public Jackson2ObjectMapperBuilderCustomizer jacksonCustomizer() {
         return builder -> {
-            builder.modules(new JavaTimeModule());
-            com.fasterxml.jackson.databind.module.SimpleModule module =
+            com.fasterxml.jackson.databind.module.SimpleModule moneyModule =
                     new com.fasterxml.jackson.databind.module.SimpleModule();
-            module.addSerializer(BigDecimal.class, new BigDecimalSerializer());
-            builder.modules(module);
+            moneyModule.addSerializer(BigDecimal.class, new BigDecimalSerializer());
+            // 关键：JavaTimeModule 与金额模块必须在同一次 modules() 调用中注册，
+            // 否则后一次调用会覆盖前一次（Spring Builder 的 modules 为覆盖语义），
+            // 导致 LocalDate 失去反/序列化能力（原 500 根因）。
+            builder.modules(new JavaTimeModule(), moneyModule);
         };
     }
 

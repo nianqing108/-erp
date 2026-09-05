@@ -104,3 +104,16 @@ CREATE TABLE IF NOT EXISTS order_no_sequence (
     current_val INT NOT NULL DEFAULT 0 COMMENT '当日已发放最大流水号',
     updated_at  DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT = '内部订单号按日流水序列表';
+
+-- ----------------------------
+-- 系统用户表（注册/登录）
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS sys_user (
+    id         INT PRIMARY KEY AUTO_INCREMENT,
+    username   VARCHAR(32) NOT NULL COMMENT '登录名（唯一）',
+    password   VARCHAR(100) NOT NULL COMMENT 'BCrypt 哈希',
+    real_name  VARCHAR(50)  COMMENT '姓名',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_username (username)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT = '系统用户表';

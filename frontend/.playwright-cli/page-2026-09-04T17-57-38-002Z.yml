@@ -1,0 +1,13 @@
+- generic [ref=e4]:
+  - generic [ref=e5]:
+    - generic [ref=e6]: ERP
+    - generic [ref=e7]:
+      - generic [ref=e8]: 简易ERP
+      - generic [ref=e9]: 订单 · 欠款管理
+  - generic [ref=e10]:
+    - textbox "登录名" [ref=e19]
+    - textbox "密码" [ref=e29]
+    - button "登 录" [ref=e30] [cursor=pointer]
+  - generic [ref=e32]:
+    - text: 还没有账号？
+    - button "注册新账号" [ref=e33] [cursor=pointer]

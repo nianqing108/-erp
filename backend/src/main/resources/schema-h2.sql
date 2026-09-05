@@ -84,3 +84,13 @@ CREATE TABLE IF NOT EXISTS order_no_sequence (
     current_val INT NOT NULL DEFAULT 0,
     updated_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS sys_user (
+    id         INT PRIMARY KEY AUTO_INCREMENT,
+    username   VARCHAR(32) NOT NULL,
+    password   VARCHAR(100) NOT NULL,
+    real_name  VARCHAR(50),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE UNIQUE INDEX IF NOT EXISTS uk_sys_user_username ON sys_user (username);

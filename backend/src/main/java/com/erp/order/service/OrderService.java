@@ -7,7 +7,6 @@ import com.erp.common.MoneyUtil;
 import com.erp.common.PageResult;
 import com.erp.customer.entity.Customer;
 import com.erp.customer.mapper.CustomerMapper;
-import com.erp.order.dto.ConfirmShipDTO;
 import com.erp.order.dto.OrderQueryDTO;
 import com.erp.order.dto.OrderSaveDTO;
 import com.erp.order.dto.PaymentDTO;
@@ -142,7 +141,7 @@ public class OrderService {
         Order order = requireOrder(id);
         OrderStatus status = OrderStatus.of(order.getStatus());
         if (!status.canEdit()) {
-            throw new BusinessException("仅「录入」状态订单允许编辑，当前状态：" + status.getLabel());
+            throw new BusinessException("仅「待发货」状态订单允许编辑，当前状态：" + status.getLabel());
         }
         requireCustomer(dto.getCustomerId());
         validateAmount(dto.getTotalAmount());
@@ -163,57 +162,44 @@ public class OrderService {
     }
 
     /**
-     * 生成出货单：draft → pending，登记计划发货日。
+     * 直接发货：draft → shipped，登记实际发货日与物流单号，此时形成应收。
+     *
+     * <p>流程已简化，不再有「计划发货 → 确认发货」两步；
+     * PENDING 仅为历史数据兼容保留的枚举值。
      */
     @Transactional
     public void ship(Integer id, ShipDTO dto) {
         Order order = requireOrder(id);
         OrderStatus status = OrderStatus.of(order.getStatus());
         if (!status.canShip()) {
-            throw new BusinessException("仅「录入」状态订单可生成出货单，当前状态：" + status.getLabel());
+            throw new BusinessException("仅「待发货」状态订单可发货，当前状态：" + status.getLabel());
         }
         validateShipmentDate(dto.getShipmentDate(), order);
 
-        Shipment shipment = new Shipment();
-        shipment.setOrderId(id);
-        shipment.setShipmentDate(dto.getShipmentDate());
-        shipment.setTrackingNo(trimToNull(dto.getTrackingNo()));
-        shipment.setRemark(trimToNull(dto.getRemark()));
-        shipment.setConfirmed(0);
-        shipmentMapper.insert(shipment);
-
-        changeStatus(order, status, OrderStatus.PENDING);
-        log.info("订单 {} 生成出货单，计划发货日 {}", order.getOrderNo(), dto.getShipmentDate());
-    }
-
-    /**
-     * 确认发货：pending → shipped，登记实际发货日，此时才形成应收。
-     */
-    @Transactional
-    public void confirmShip(Integer id, ConfirmShipDTO dto) {
-        Order order = requireOrder(id);
-        OrderStatus status = OrderStatus.of(order.getStatus());
-        if (!status.canConfirmShip()) {
-            throw new BusinessException("仅「待出货」状态订单可确认发货，当前状态：" + status.getLabel());
-        }
         Shipment shipment = findShipment(id);
         if (shipment == null) {
-            throw new BusinessException("出货单不存在，无法确认发货");
+            shipment = new Shipment();
+            shipment.setOrderId(id);
+            shipment.setShipmentDate(dto.getShipmentDate());
+            shipment.setTrackingNo(trimToNull(dto.getTrackingNo()));
+            shipment.setRemark(trimToNull(dto.getRemark()));
+            shipment.setConfirmed(1);
+            shipmentMapper.insert(shipment);
+        } else {
+            // 历史数据兜底：该单已有出货记录时直接更新为实际发货
+            shipment.setShipmentDate(dto.getShipmentDate());
+            if (StringUtils.hasText(dto.getTrackingNo())) {
+                shipment.setTrackingNo(dto.getTrackingNo().trim());
+            }
+            if (StringUtils.hasText(dto.getRemark())) {
+                shipment.setRemark(dto.getRemark().trim());
+            }
+            shipment.setConfirmed(1);
+            shipmentMapper.updateById(shipment);
         }
-        validateShipmentDate(dto.getShipmentDate(), order);
-
-        shipment.setShipmentDate(dto.getShipmentDate());
-        if (StringUtils.hasText(dto.getTrackingNo())) {
-            shipment.setTrackingNo(dto.getTrackingNo().trim());
-        }
-        if (StringUtils.hasText(dto.getRemark())) {
-            shipment.setRemark(dto.getRemark().trim());
-        }
-        shipment.setConfirmed(1);
-        shipmentMapper.updateById(shipment);
 
         changeStatus(order, status, OrderStatus.SHIPPED);
-        log.info("订单 {} 确认发货，实际发货日 {}", order.getOrderNo(), dto.getShipmentDate());
+        log.info("订单 {} 已发货，实际发货日 {}", order.getOrderNo(), dto.getShipmentDate());
     }
 
     /**
@@ -367,9 +353,6 @@ public class OrderService {
         }
         if (status.canShip()) {
             actions.add("ship");
-        }
-        if (status.canConfirmShip()) {
-            actions.add("confirmShip");
         }
         if (status.canPay()) {
             actions.add("pay");

@@ -2,7 +2,6 @@ package com.erp.order.controller;
 
 import com.erp.common.PageResult;
 import com.erp.common.Result;
-import com.erp.order.dto.ConfirmShipDTO;
 import com.erp.order.dto.OrderQueryDTO;
 import com.erp.order.dto.OrderSaveDTO;
 import com.erp.order.dto.PaymentDTO;
@@ -49,30 +48,23 @@ public class OrderController {
     }
 
     @PostMapping
-    @Operation(summary = "创建订单", description = "内部订单号由系统自动生成，初始状态为录入(draft)")
+    @Operation(summary = "创建订单", description = "内部订单号由系统自动生成，初始状态为待发货(draft)")
     public Result<OrderCreateVO> create(@RequestBody @Valid OrderSaveDTO dto) {
         Order order = orderService.create(dto);
         return Result.success(new OrderCreateVO(order.getId(), order.getOrderNo()));
     }
 
     @PutMapping("/{id}")
-    @Operation(summary = "编辑订单", description = "仅录入(draft)状态允许编辑核心字段")
+    @Operation(summary = "编辑订单", description = "仅待发货(draft)状态允许编辑核心字段")
     public Result<Void> update(@PathVariable Integer id, @RequestBody @Valid OrderSaveDTO dto) {
         orderService.update(id, dto);
         return Result.success();
     }
 
     @PostMapping("/{id}/ship")
-    @Operation(summary = "生成出货单", description = "draft → pending，登记计划发货日")
+    @Operation(summary = "直接发货", description = "draft → shipped，登记实际发货日与物流单号，此时形成应收")
     public Result<Void> ship(@PathVariable Integer id, @RequestBody @Valid ShipDTO dto) {
         orderService.ship(id, dto);
-        return Result.success();
-    }
-
-    @PostMapping("/{id}/confirm-ship")
-    @Operation(summary = "确认发货", description = "pending → shipped，登记实际发货日，此时形成应收")
-    public Result<Void> confirmShip(@PathVariable Integer id, @RequestBody @Valid ConfirmShipDTO dto) {
-        orderService.confirmShip(id, dto);
         return Result.success();
     }
 
@@ -84,7 +76,7 @@ public class OrderController {
     }
 
     @PostMapping("/{id}/cancel")
-    @Operation(summary = "取消订单", description = "仅录入/待出货状态可取消；已发货、已完成不可取消")
+    @Operation(summary = "取消订单", description = "仅未发货(待发货)状态可取消；已发货、已完成不可取消")
     public Result<Void> cancel(@PathVariable Integer id) {
         orderService.cancel(id);
         return Result.success();

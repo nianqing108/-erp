@@ -5,8 +5,11 @@ server:
 spring:
   application:
     name: erp-backend
+  # prod 组合档：docker 部署用 SPRING_PROFILES_ACTIVE=prod，等价 mysql+prod
   profiles:
     active: mysql
+    group:
+      prod: mysql,prod
 
   # JSON：时区统一、忽略 null、日期按 ISO 字符串输出
   jackson:
@@ -32,9 +35,10 @@ spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     # 必须带 serverTimezone=Asia/Shanghai，否则日期字段会错位（原文档附录缺陷第 7 条）
-    url: jdbc:mysql://localhost:3306/erp_db?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
-    username: root
-    password: 123456
+    # 账号密码支持环境变量覆盖，避免生产密码硬编码进代码库
+    url: ${DB_URL:jdbc:mysql://localhost:3306/erp_db?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:123456}
     hikari:
       pool-name: ErpHikariPool
       maximum-pool-size: 20
@@ -65,7 +69,7 @@ spring:
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true
-    log-impl: org.apache.ibatis.logging.slf4j.Slf4jLogger
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
     default-enum-type-handler: com.baomidou.mybatisplus.core.handlers.MybatisEnumTypeHandler
   global-config:
     db-config:
@@ -78,6 +82,13 @@ erp:
     prefix: ORD
     seq-length: 4
     max-retry: 3
+  auth:
+    # 生产必须通过环境变量 JWT_SECRET 覆盖（HS256 要求 >= 32 字节）
+    jwt-secret: ${JWT_SECRET:erp-local-dev-secret-key-change-me-please-32B}
+    # 登录态有效期（小时）
+    token-ttl-hours: 12
+    # 注册邀请码：留空则开放注册；公网部署建议设置
+    invite-code: ${REGISTER_CODE:}
 
 springdoc:
   swagger-ui:
@@ -101,3 +112,32 @@ logging:
     root: INFO
     com.erp: DEBUG
     com.erp.order.OrderNoGenerator: INFO
+
+---
+# ===================== 生产加固配置（prod 组合档追加生效） =====================
+# 关闭接口文档与敏感端点详情，仅保留健康探针；日志收敛为 INFO。
+# 置于文件末尾，确保覆盖上方公共配置。
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+
+logging:
+  level:
+    root: INFO
+    com.erp: INFO

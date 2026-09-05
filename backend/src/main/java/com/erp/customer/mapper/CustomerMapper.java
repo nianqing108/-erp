@@ -30,4 +30,9 @@ public interface CustomerMapper extends BaseMapper<Customer> {
      * 查询单个客户的应收欠款与有效订单数。
      */
     Customer selectDebtByCustomerId(@Param("customerId") Integer customerId);
+
+    /**
+     * 仅查询客户公司名称（月度明细轻量关联用）。
+     */
+    String selectNameById(@Param("id") Integer id);
 }

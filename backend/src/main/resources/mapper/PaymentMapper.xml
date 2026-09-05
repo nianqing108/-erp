@@ -31,4 +31,55 @@
         ORDER BY p.received_date DESC, p.id DESC
     </select>
 
+    <sql id="dateRangeFilter">
+        <if test="from != null">
+            AND p.received_date &gt;= #{from}
+        </if>
+        <if test="to != null">
+            AND p.received_date &lt;= #{to}
+        </if>
+    </sql>
+
+    <select id="sumAll" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(p.amount), 0) FROM payments p
+    </select>
+
+    <select id="sumBetween" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(p.amount), 0)
+        FROM payments p
+        <where>
+            <include refid="dateRangeFilter"/>
+        </where>
+    </select>
+
+    <select id="selectBetween" resultType="com.erp.payment.entity.Payment">
+        SELECT p.id,
+               p.order_id      AS orderId,
+               p.amount        AS amount,
+               p.received_date AS receivedDate,
+               p.note          AS note,
+               p.created_at    AS createdAt
+        FROM payments p
+        <where>
+            <include refid="dateRangeFilter"/>
+        </where>
+        ORDER BY p.received_date ASC, p.id ASC
+    </select>
+
+    <select id="selectByCustomerAndDateRange" resultType="com.erp.payment.entity.Payment">
+        SELECT p.id,
+               p.order_id      AS orderId,
+               p.amount        AS amount,
+               p.received_date AS receivedDate,
+               p.note          AS note,
+               p.created_at    AS createdAt
+        FROM payments p
+                 JOIN orders o ON p.order_id = o.id
+        <where>
+            AND o.customer_id = #{customerId}
+            <include refid="dateRangeFilter"/>
+        </where>
+        ORDER BY p.received_date ASC, p.id ASC
+    </select>
+
 </mapper>

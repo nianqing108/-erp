@@ -1,0 +1,51 @@
+- generic [ref=f3e3]:
+  - complementary [ref=f3e4]:
+    - generic [ref=f3e5]:
+      - generic [ref=f3e6]: ERP
+      - generic [ref=f3e7]:
+        - generic [ref=f3e8]: 简易ERP
+        - generic [ref=f3e9]: 订单 · 欠款管理
+    - menubar [ref=f3e10]:
+      - menuitem "仪表盘" [ref=f3e11] [cursor=pointer]
+      - menuitem "客户管理" [ref=f3e18] [cursor=pointer]
+      - menuitem "订单管理" [ref=f3e23] [cursor=pointer]
+      - menuitem "客户对账单" [ref=f3e28] [cursor=pointer]
+      - menuitem "月度报表" [ref=f3e33] [cursor=pointer]
+  - generic [ref=f3e38]:
+    - banner [ref=f3e39]:
+      - generic [ref=f3e40]: 仪表盘
+      - generic [ref=f3e41]:
+        - generic: 本地演示环境 · H2
+        - button [ref=f3e43] [cursor=pointer]
+    - main [ref=f3e50]:
+      - generic [ref=f3e51]:
+        - generic [ref=f3e52]:
+          - generic [ref=f3e53]:
+            - generic [ref=f3e54]: 未发货金额
+            - generic [ref=f3e55]: "0.00"
+            - generic [ref=f3e56]: 已录入未发货
+          - generic [ref=f3e57]:
+            - generic [ref=f3e58]: 本月订单额
+            - generic [ref=f3e59]: "0.00"
+            - generic [ref=f3e60]: 本月下单（不含取消）
+          - generic [ref=f3e61]:
+            - generic [ref=f3e62]: 应收欠款
+            - generic [ref=f3e63]: "0.00"
+            - generic [ref=f3e64]: 0 笔未结清
+          - generic [ref=f3e65]:
+            - generic [ref=f3e66]: 本月回款
+            - generic [ref=f3e67]: "0.00"
+            - generic [ref=f3e68]: 本月到账
+          - generic [ref=f3e69]:
+            - generic [ref=f3e70]: 累计已收
+            - generic [ref=f3e71]: "0.00"
+            - generic [ref=f3e72]: 全部收款合计
+          - generic [ref=f3e73]:
+            - generic [ref=f3e74]: 客户总数
+            - generic [ref=f3e75]: "0"
+            - generic [ref=f3e76]: 注册客户
+        - generic [ref=f3e77]:
+          - generic [ref=f3e78]: 逾期账龄分布（按约定收款日起算，未填的按发货日）
+          - generic [ref=f3e83]:
+            - generic [ref=f3e84]: 欠款 Top 客户
+            - paragraph [ref=f3e104]: 当前无应收欠款

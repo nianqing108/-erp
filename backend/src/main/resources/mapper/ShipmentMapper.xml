@@ -19,4 +19,26 @@
         </foreach>
     </select>
 
+    <select id="selectConfirmedBetween" resultType="com.erp.shipment.entity.Shipment">
+        SELECT s.id,
+               s.order_id       AS orderId,
+               s.shipment_date  AS shipmentDate,
+               s.tracking_no    AS trackingNo,
+               s.confirmed      AS confirmed,
+               s.remark         AS remark,
+               s.created_at     AS createdAt,
+               s.updated_at     AS updatedAt
+        FROM shipments s
+        <where>
+            AND s.confirmed = 1
+            <if test="from != null">
+                AND s.shipment_date &gt;= #{from}
+            </if>
+            <if test="to != null">
+                AND s.shipment_date &lt;= #{to}
+            </if>
+        </where>
+        ORDER BY s.shipment_date ASC
+    </select>
+
 </mapper>

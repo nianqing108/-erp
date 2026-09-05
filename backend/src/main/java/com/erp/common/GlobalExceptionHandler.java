@@ -29,6 +29,16 @@ public class GlobalExceptionHandler {
         return Result.fail(e.getMessage());
     }
 
+    /**
+     * 未登录 / 登录态失效：响应体 code=401，前端据此清理本地态并跳转登录页。
+     */
+    @ExceptionHandler(UnauthorizedException.class)
+    @ResponseStatus(HttpStatus.OK)
+    public Result<Void> handleUnauthorized(UnauthorizedException e) {
+        log.warn("未授权访问：{}", e.getMessage());
+        return Result.fail(401, e.getMessage());
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.OK)
     public Result<Void> handleValid(MethodArgumentNotValidException e) {

@@ -1,0 +1,63 @@
+﻿### Page
+- Page URL: http://localhost:5173/dashboard
+- Page Title: 简易ERP · 订单与欠款管理
+### Snapshot
+```yaml
+- generic [ref=f1e3]:
+  - complementary [ref=f1e4]:
+    - generic [ref=f1e5]:
+      - generic [ref=f1e6]: ERP
+      - generic [ref=f1e7]:
+        - generic [ref=f1e8]: 简易ERP
+        - generic [ref=f1e9]: 订单 · 欠款管理
+    - menubar [ref=f1e10]:
+      - menuitem "仪表盘" [ref=f1e11] [cursor=pointer]
+      - menuitem "客户管理" [ref=f1e18] [cursor=pointer]
+      - menuitem "订单管理" [ref=f1e23] [cursor=pointer]
+      - menuitem "客户对账单" [ref=f1e28] [cursor=pointer]
+      - menuitem "月度报表" [ref=f1e33] [cursor=pointer]
+  - generic [ref=f1e38]:
+    - banner [ref=f1e39]:
+      - generic [ref=f1e40]: 仪表盘
+      - generic [ref=f1e41]:
+        - generic [ref=f1e42]: 本地演示环境 · H2
+        - button [ref=f1e45] [cursor=pointer]
+    - main [ref=f1e52]:
+      - generic [ref=f1e53]:
+        - generic [ref=f1e54]:
+          - generic [ref=f1e55]:
+            - generic [ref=f1e56]: 未发货金额
+            - generic [ref=f1e57]: "0.00"
+            - generic [ref=f1e58]: 已录入未发货
+          - generic [ref=f1e59]:
+            - generic [ref=f1e60]: 本月订单额
+            - generic [ref=f1e61]: 4,000.00
+            - generic [ref=f1e62]: 本月下单（不含取消）
+          - generic [ref=f1e63]:
+            - generic [ref=f1e64]: 应收欠款
+            - generic [ref=f1e65]: 6,000.00
+            - generic [ref=f1e66]: 1 笔未结清
+          - generic [ref=f1e67]:
+            - generic [ref=f1e68]: 本月回款
+            - generic [ref=f1e69]: 4,000.00
+            - generic [ref=f1e70]: 本月到账
+          - generic [ref=f1e71]:
+            - generic [ref=f1e72]: 累计已收
+            - generic [ref=f1e73]: 4,000.00
+            - generic [ref=f1e74]: 全部收款合计
+          - generic [ref=f1e75]:
+            - generic [ref=f1e76]: 客户总数
+            - generic [ref=f1e77]: "1"
+            - generic [ref=f1e78]: 注册客户
+        - generic [ref=f1e79]:
+          - generic [ref=f1e80]: 逾期账龄分布（按约定收款日起算，未填的按发货日）
+          - generic [ref=f1e85]:
+            - generic [ref=f1e86]: 欠款 Top 客户
+            - generic [ref=f1e88]:
+              - generic [ref=f1e89]:
+                - generic [ref=f1e90]: 测试客户A
+                - generic [ref=f1e91]: 6,000.00
+              - progressbar [ref=f1e92]:
+                - generic [ref=f1e96]: 100%
+              - generic [ref=f1e97]: 信用额度 50,000.00 · 占用 12%
+```

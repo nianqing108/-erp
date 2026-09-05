@@ -9,6 +9,7 @@ import com.erp.order.vo.OrderVO;
 import com.erp.order.vo.StatusAmountVO;
 import org.apache.ibatis.annotations.Param;
 
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -42,4 +43,14 @@ public interface OrderMapper extends BaseMapper<Order> {
     int updateStatusCascade(@Param("id") Integer id,
                             @Param("expected") String expected,
                             @Param("target") String target);
+
+    /**
+     * 查询指定客户在发货日期区间内已确认发货的订单（对账单用）。
+     *
+     * <p>仅包含 shipped / paid 状态 —— 未发货不形成应收，已取消不参与对账。
+     * from / to 可为 null 表示不限。
+     */
+    List<com.erp.report.vo.StatementOrderVO> selectShippedByCustomer(@Param("customerId") Integer customerId,
+                                                                       @Param("from") LocalDate from,
+                                                                       @Param("to") LocalDate to);
 }

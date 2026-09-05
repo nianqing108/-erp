@@ -70,4 +70,8 @@
         WHERE d.customer_id = #{customerId}
     </select>
 
+    <select id="selectNameById" resultType="java.lang.String">
+        SELECT c.name FROM customers c WHERE c.id = #{id}
+    </select>
+
 </mapper>

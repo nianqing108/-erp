@@ -1,0 +1,66 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: erp-mysql
+    environment:
+      # 密码从同目录 .env 文件读取（见 README 上线清单），避免明文入库
+      MYSQL_ROOT_PASSWORD: "${DB_PASSWORD:-erp_prod_2026}"
+      MYSQL_DATABASE: erp_db
+      TZ: Asia/Shanghai
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - mysql-data:/var/lib/mysql
+      # 首次启动自动执行建表脚本
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p123456"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  backend:
+    build: ./backend
+    container_name: erp-backend
+    environment:
+      # prod 组合档 = mysql + prod（关闭 Swagger、收敛 Actuator）
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/erp_db?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: "${DB_PASSWORD:-erp_prod_2026}"
+      # JWT 签名密钥：上线必须修改为随机长字符串（至少 32 字符）
+      JWT_SECRET: "${JWT_SECRET:-erp-local-dev-secret-key-change-me-please-32B}"
+      # 注册邀请码：设置后注册须携带该码；留空 = 开放注册
+      REGISTER_CODE: "${REGISTER_CODE:-}"
+      TZ: Asia/Shanghai
+    depends_on:
+      mysql:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "5"
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    container_name: erp-frontend
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+    # auth_basic 凭证外挂，便于改密后无需重建镜像
+    volumes:
+      - ./frontend/htpasswd:/etc/nginx/htpasswd:ro
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    restart: unless-stopped
+
+volumes:
+  mysql-data:

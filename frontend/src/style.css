@@ -1,0 +1,85 @@
+:root {
+  --c-primary: #2563eb;
+  --c-primary-light: #60a5fa;
+  --c-bg: #f4f6fa;
+  --c-bg-soft: #ffffff;
+  --c-bg-tint: #eef2ff;
+  --c-text: #111827;
+  --c-text-sub: #4b5563;
+  --c-text-mute: #9ca3af;
+
+  /* 状态色语义（全局复用） */
+  --s-draft: #9ca3af;     /* 录入 灰 */
+  --s-pending: #f59e0b;   /* 待出货 橙 */
+  --s-shipped: #2563eb;   /* 待付款 蓝 */
+  --s-paid: #16a34a;      /* 已完成 绿 */
+  --s-cancelled: #dc2626; /* 已取消 红 */
+
+  --radius: 16px;
+  --shadow-soft: 0 6px 24px rgba(17, 24, 39, 0.06);
+  --shadow-hover: 0 12px 32px rgba(37, 99, 235, 0.14);
+  --font: 'PingFang SC', 'Microsoft YaHei', system-ui, -apple-system, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: var(--font);
+  color: var(--c-text);
+  background: var(--c-bg);
+  font-size: 14px;
+}
+
+/* 玻璃拟态卡片 */
+.glass {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-soft);
+}
+
+.page {
+  padding: 20px 24px;
+}
+
+.page-title {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0 0 16px;
+}
+
+/* 卡片 hover 上浮微动效 */
+.hover-up {
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+.hover-up:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover);
+}
+
+/* 等宽数字，金额对齐 */
+.num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+}
+
+.text-mute {
+  color: var(--c-text-mute);
+}
+.text-sub {
+  color: var(--c-text-sub);
+}
+.danger {
+  color: var(--s-cancelled);
+}
